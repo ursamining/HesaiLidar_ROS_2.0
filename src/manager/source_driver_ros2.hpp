@@ -298,8 +298,19 @@ inline sensor_msgs::msg::PointCloud2 SourceDriver::ToRosMsg(const LidarDecodedFr
     ++iter_timestamp_;   
   }
   // printf("HesaiLidar Runing Status [standby mode:%u]  |  [speed:%u]\n", frame.work_mode, frame.spin_speed);
-  printf("%s frame:%d points:%u packet:%d start time:%lf end time:%lf\n", prefix, frame_index, points_number, packet_number, frame_start_timestamp, frame_end_timestamp) ;
-  std::cout.flush();
+  if (node_ptr_) {
+    RCLCPP_INFO_THROTTLE(
+      node_ptr_->get_logger(),
+      *node_ptr_->get_clock(),
+      15000,
+      "%s frame:%d points:%u packet:%d start time:%lf end time:%lf",
+      prefix,
+      frame_index,
+      points_number,
+      packet_number,
+      frame_start_timestamp,
+      frame_end_timestamp);
+  }
   auto sec = (uint64_t)floor(frame_start_timestamp);
   if (sec <= std::numeric_limits<int32_t>::max()) {
     ros_msg.header.stamp.sec = (uint32_t)floor(frame_start_timestamp);
