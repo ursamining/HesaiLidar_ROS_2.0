@@ -65,17 +65,15 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
 #endif
 
-  std::string config_path;
-
-#ifdef RUN_IN_ROS_WORKSPACE
-   config_path = ros::package::getPath("hesai_ros_driver");
-#else
-   config_path = (std::string)PROJECT_PATH;
-#endif
-
-   config_path += "/config/config.yaml";
-
 #ifdef ROS_FOUND
+  std::string config_path;
+#ifdef RUN_IN_ROS_WORKSPACE
+  config_path = ros::package::getPath("hesai_ros_driver");
+#else
+  config_path = (std::string)PROJECT_PATH;
+#endif
+  config_path += "/config/config.yaml";
+
   ros::NodeHandle priv_hh("~");
   std::string path;
   priv_hh.param("config_path", path, std::string(""));
@@ -84,18 +82,28 @@ int main(int argc, char** argv)
     config_path = path;
   }
 #elif ROS2_FOUND
-  // workaround to get config_path from ros parameter
+  // Launch should load the YAML file and pass it in as a string parameter.
+  // This keeps the driver from reading config files directly.
   auto node = rclcpp::Node::make_shared("hesai_ros_driver_node");
-  std::string path = node->declare_parameter<std::string>("config_path", "");
+  const std::string config_yaml = node->declare_parameter<std::string>("config_yaml", "");
   node.reset();
-  if (!path.empty())
+
+  if (config_yaml.empty())
   {
-    config_path = path;
+    std::cerr << "Missing required ROS2 parameter 'config_yaml'. "
+                 "Load config/config.yaml in the launch file and pass its contents to this parameter."
+              << std::endl;
+    rclcpp::shutdown();
+    return 1;
   }
 #endif
 
   YAML::Node config;
+#ifdef ROS_FOUND
   config = YAML::LoadFile(config_path);
+#elif ROS2_FOUND
+  config = YAML::Load(config_yaml);
+#endif
   std::shared_ptr<NodeManager> demo_ptr = std::make_shared<NodeManager>();
   demo_ptr->Init(config);
   demo_ptr->Start();
