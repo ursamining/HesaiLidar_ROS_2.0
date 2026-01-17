@@ -74,7 +74,7 @@ lidar:
       device_fault_port: 0                  # Filter fault message for specified source ports in case of multiple lidar, setting >=1024
       frame_frequency: 0                    # The frequency that point cloud sends.
       default_frame_frequency: 10.0         # The default frequency that point cloud sends.
-      echo_mode_filter: 0                   # return mode filter
+      echo_mode_filter: 1                   # return mode filter
 
     ros:
       ros_frame_id: hesai_lidar                       # Frame id of packet message and point cloud message
